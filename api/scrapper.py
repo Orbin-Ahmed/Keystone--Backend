@@ -18,8 +18,8 @@ def search_pinterest(query, page_size):
         minimized_result = {
             'id': result.get('id'),
             'images': {
-                '474x': result.get('images', {}).get('474x', {}).get('url'),
-                'orig': result.get('images', {}).get('orig', {}).get('url')
+                'thumb': result.get('images', {}).get('474x', {}).get('url'),
+                'full': result.get('images', {}).get('orig', {}).get('url')
             }
         }
         results.append(minimized_result)

@@ -135,4 +135,4 @@ def image_search_view(request):
     except:
         return Response("Query params missing", status=404)
     data = search_pinterest(query, page_size)
-    return Response({"results": data}, status=200)
+    return Response({"data": data}, status=200)
