@@ -1,10 +1,9 @@
 from py3pin.Pinterest import Pinterest
 from .proxy import get_random_proxy
 
-file_path = "E:/Django/Keystone--Backend/Free_Proxy_List.json"
-p = get_random_proxy(file_path)
-
 def search_pinterest(query, page_size):
+    file_path = "E:/Django/Keystone--Backend/Free_Proxy_List.json"
+    p = get_random_proxy(file_path)
     pinterest = Pinterest(
         email='acantoahmed@hotmail.com',
         password='Pranto@123',
@@ -12,8 +11,8 @@ def search_pinterest(query, page_size):
         proxies=p,
     )
     search_batch = pinterest.search(scope='pins', query=query, page_size=page_size)
-    print(p)
     results = []
+    print(p)
 
     for result in search_batch:
         minimized_result = {
