@@ -12,7 +12,6 @@ def search_pinterest(query, page_size):
     )
     search_batch = pinterest.search(scope='pins', query=query, page_size=page_size)
     results = []
-    print(p)
 
     for result in search_batch:
         minimized_result = {
