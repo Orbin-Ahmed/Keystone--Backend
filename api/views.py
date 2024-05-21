@@ -132,8 +132,9 @@ def image_search_view(request):
     try:
         query = request.query_params.get('query')
         page_size = int(request.query_params.get('page_size'))
+        page_number = int(request.query_params.get('page_number'))
     except:
         return Response("Query params missing", status=404)
-    res = search_pinterest(query, page_size)
+    res = search_pinterest(query, page_size, page_number)
     return Response(res, status=200)
 
