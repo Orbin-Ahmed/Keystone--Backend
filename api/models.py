@@ -27,10 +27,21 @@ class Company(models.Model):
     logo = models.ImageField(upload_to='photo/',blank=True, null=True)
 
 class Image(models.Model):
-    img_url = models.URLField(blank=True, null=True)
     source = models.CharField(max_length=50, null=True, blank=True)
     nationality = models.CharField(max_length=50, null=True, blank=True)
     room_type = models.CharField(max_length=50, null=True, blank=True)
     temperature = models.CharField(max_length=50, null=True, blank=True)
     theme = models.CharField(max_length=50, null=True, blank=True)
     color = models.CharField(max_length=50, null=True, blank=True)
+    is_url = models.BooleanField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class meta:
+        abstract = True
+
+class Image_file(Image):
+    photo = models.ImageField(upload_to='pin/', blank=True, null=True)
+
+class Image_url(Image):
+    photo = models.URLField(blank=True, null = True)
+    

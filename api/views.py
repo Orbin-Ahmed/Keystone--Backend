@@ -1,50 +1,22 @@
 from django.contrib.auth import authenticate, login
-from .models import User, Company, Social_link
+from .models import User, Company, Social_link, Image_url, Image_file, Image
 from django.contrib.auth.hashers import make_password
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.viewsets import ModelViewSet
-from .serializer import UserPostSerializer, UserFetchSerializer, CompanySerializer, SocialLinkSerializer
+from .serializer import *
 from django.contrib.auth.models import AnonymousUser
 from .scrapper import search_pinterest
+from rest_framework.parsers import MultiPartParser
+
 
 # Create your views here.
 # 0 = super User 
 # 1 = Admin 
 # 2 = Moderator 
 # 3 = Designer 
-
-@api_view(['post'])
-def login_view(request):
-    try:
-        username = request.data['username']
-        password = request.data['password']
-    except:
-        return Response("All field is required", status=404)
-    try:
-        user = authenticate(request, username=username, password=password)
-    except:
-        return Response("Invalid credentials", status=404)
-    if user is None:
-        return Response("Invalid credentials", status=401)
-    else:
-        login(request, user)
-        try:
-            Token.objects.filter(user=user).delete()
-        except:
-            pass
-        token = Token.objects.create(user=user)
-        return Response({"Token": token.key}, status=200)
-
-
-@api_view(['get'])
-@permission_classes([IsAuthenticatedOrReadOnly])
-def logout_view(request):
-    Token.objects.filter(user=request.user).delete()
-    return Response({"message": "User logout successfull."}, status=200)
-
 
 class UserView(ModelViewSet):
     queryset = User.objects.all()
@@ -86,12 +58,6 @@ class UserView(ModelViewSet):
             serializer.validated_data['password'] = password
         serializer.save()
 
-@api_view(['get'])
-@permission_classes([IsAuthenticated])
-def user_token(request):
-    serializer = UserFetchSerializer(request.user)
-    return Response(serializer.data, status=200)
-
 
 class CompanyView(ModelViewSet):
     queryset = Company.objects.all()
@@ -125,7 +91,46 @@ class SocialLinkView(ModelViewSet):
         else:
             permission_classes = self.permission_classes
         return [permission() for permission in permission_classes]
-    
+
+    def create(self, request, *args, **kwargs):
+        self.request.data['user'] = self.request.user.id
+        return super().create(request, *args, **kwargs)
+
+
+@api_view(['post'])
+def login_view(request):
+    try:
+        username = request.data['username']
+        password = request.data['password']
+    except:
+        return Response("All field is required", status=404)
+    try:
+        user = authenticate(request, username=username, password=password)
+    except:
+        return Response("Invalid credentials", status=404)
+    if user is None:
+        return Response("Invalid credentials", status=401)
+    else:
+        login(request, user)
+        try:
+            Token.objects.filter(user=user).delete()
+        except:
+            pass
+        token = Token.objects.create(user=user)
+        return Response({"Token": token.key}, status=200)
+
+@api_view(['get'])
+@permission_classes([IsAuthenticatedOrReadOnly])
+def logout_view(request):
+    Token.objects.filter(user=request.user).delete()
+    return Response({"message": "User logout successfull."}, status=200)
+
+@api_view(['get'])
+@permission_classes([IsAuthenticated])
+def user_token(request):
+    serializer = UserFetchSerializer(request.user)
+    return Response(serializer.data, status=200)
+
 @api_view(['get'])
 @permission_classes([IsAuthenticated])
 def image_search_view(request):
@@ -138,3 +143,42 @@ def image_search_view(request):
     res = search_pinterest(query, page_size, page_number)
     return Response(res, status=200)
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_images_url(request):
+    serializer = ImageURLSerializer(data = request.data, many=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.validated_data)
+    else:
+        return False
+    
+@api_view(['POST'])
+@parser_classes([MultiPartParser])
+@permission_classes([IsAuthenticated])
+def post_image_file(request):
+    serializer = ImageFileSerializer(data = request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    else:
+        return False
+    
+@api_view(['GET'])
+def get_images(request):
+    image_files = Image_file.objects.all()
+    image_urls = Image_url.objects.all()
+    
+    image_file_serializer = ImageFileSerializer(image_files, many=True)
+    image_url_serializer = ImageURLSerializer(image_urls, many=True)
+    
+    data = []
+
+    for item in image_file_serializer.data:
+        data.append(item)
+    
+    for item in image_url_serializer.data:
+        data.append(item)
+    
+    return Response(data)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Company, Social_link
+from .models import User, Company, Social_link, Image_url, Image, Image_file
 
 class UserPostSerializer(serializers.ModelSerializer):
     photo = serializers.ImageField(max_length=None, use_url=True, allow_null=True, required=False)
@@ -53,6 +53,21 @@ class SocialLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Social_link
         fields = ('id',
+                  'user',
                   'platform',
                   'link',
                   )
+        
+class ImageFileSerializer(serializers.ModelSerializer):
+    photo= serializers.ImageField(max_length=None, allow_null=True, use_url=True, required=True)
+
+    class Meta:
+        model = Image_file
+        fields = ('photo', 'source', 'nationality', 'room_type',
+                  'temperature', 'theme', 'color', 'is_url', 'created_at') 
+
+        
+class ImageURLSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image_url
+        fields = '__all__'
