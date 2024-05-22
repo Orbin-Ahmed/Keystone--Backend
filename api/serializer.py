@@ -63,7 +63,7 @@ class ImageFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image_file
-        fields = ('photo', 'source', 'nationality', 'room_type',
+        fields = ('id', 'photo', 'source', 'nationality', 'room_type',
                   'temperature', 'theme', 'color', 'is_url', 'created_at') 
 
         
