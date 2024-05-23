@@ -65,9 +65,25 @@ class ImageFileSerializer(serializers.ModelSerializer):
         model = Image_file
         fields = ('id', 'photo', 'source', 'nationality', 'room_type',
                   'temperature', 'theme', 'color', 'is_url', 'created_at') 
+    
+    def create(self, validated_data):
+        validated_data['room_type'] = validated_data.get('room_type', '').lower()
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data['room_type'] = validated_data.get('room_type', '').lower()
+        return super().update(instance, validated_data)
 
         
 class ImageURLSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image_url
         fields = '__all__'
+    
+    def create(self, validated_data):
+        validated_data['room_type'] = validated_data.get('room_type', '').lower()
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data['room_type'] = validated_data.get('room_type', '').lower()
+        return super().update(instance, validated_data)

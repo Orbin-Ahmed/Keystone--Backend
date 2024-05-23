@@ -9,30 +9,30 @@ class User(AbstractUser):
     role = models.IntegerField(default=3)
     is_active = models.BooleanField(default=True)
     full_name = models.CharField(max_length=255, blank=True, null=True)
-    phone = models.CharField(max_length=50, blank=True, null=True)
+    phone = models.CharField(max_length=255, blank=True, null=True)
     bio = models.TextField(null=True, blank=True)
     photo = models.ImageField(upload_to='photo/',blank=True, null=True)
 
 class Social_link(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    platform = models.CharField(max_length=50, blank=True, null=True)
-    link = models.URLField(max_length=50, blank=True, null=True)
+    platform = models.CharField(max_length=255, blank=True, null=True)
+    link = models.URLField(max_length=255, blank=True, null=True)
 
 class Company(models.Model):
-    name = models.CharField(max_length=50, blank=True, null=True)
-    email = models.EmailField(max_length=50, blank=True, null=True)
-    phone = models.CharField(max_length=50, blank=True, null=True)
-    license = models.CharField(max_length=50, blank=True, null=True)
+    name = models.CharField(max_length=255, blank=True, null=True)
+    email = models.EmailField(max_length=255, blank=True, null=True)
+    phone = models.CharField(max_length=255, blank=True, null=True)
+    license = models.CharField(max_length=255, blank=True, null=True)
     company_intro = models.TextField(blank=True, null=True)
     logo = models.ImageField(upload_to='photo/',blank=True, null=True)
 
 class Image(models.Model):
-    source = models.CharField(max_length=50, null=True, blank=True)
-    nationality = models.CharField(max_length=50, null=True, blank=True)
-    room_type = models.CharField(max_length=50, null=True, blank=True)
-    temperature = models.CharField(max_length=50, null=True, blank=True)
-    theme = models.CharField(max_length=50, null=True, blank=True)
-    color = models.CharField(max_length=50, null=True, blank=True)
+    source = models.CharField(max_length=255, null=True, blank=True)
+    nationality = models.CharField(max_length=255, null=True, blank=True)
+    room_type = models.CharField(max_length=255, null=True, blank=True)
+    temperature = models.CharField(max_length=255, null=True, blank=True)
+    theme = models.CharField(max_length=255, null=True, blank=True)
+    color = models.CharField(max_length=255, null=True, blank=True)
     is_url = models.BooleanField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
@@ -43,5 +43,5 @@ class Image_file(Image):
     photo = models.ImageField(upload_to='pin/', blank=True, null=True)
 
 class Image_url(Image):
-    photo = models.URLField(blank=True, null = True)
+    photo = models.URLField(max_length=255, blank=True, null = True)
     

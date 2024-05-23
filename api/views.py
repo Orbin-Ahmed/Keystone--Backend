@@ -152,7 +152,7 @@ def post_images_url(request):
         serializer.save()
         return Response(serializer.validated_data)
     else:
-        return False
+        return Response(serializer.errors, status=400)
     
 @api_view(['POST'])
 @parser_classes([MultiPartParser])
@@ -163,12 +163,24 @@ def post_image_file(request):
         serializer.save()
         return Response(serializer.data)
     else:
-        return False
+        return Response(serializer.errors, status=400)
     
 @api_view(['GET'])
 def get_images(request):
+    room_type = request.GET.get('room_type')
+    source = request.GET.get('source')
+
     image_files = Image_file.objects.all()
     image_urls = Image_url.objects.all()
+
+    if room_type:
+        room_type = room_type.lower()
+        image_files = image_files.filter(room_type=room_type)
+        image_urls = image_urls.filter(room_type=room_type)
+
+    if source:
+        image_files = image_files.filter(source=source)
+        image_urls = image_urls.filter(source=source)
     
     image_file_serializer = ImageFileSerializer(image_files, many=True)
     image_url_serializer = ImageURLSerializer(image_urls, many=True)
