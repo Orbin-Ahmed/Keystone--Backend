@@ -17,6 +17,7 @@ urlpatterns = [
     path('images/file/', views.post_image_file, name= 'post_image_by_file'),
     path('images/', views.get_images, name= 'get_all_image_update_image'),
     path('socials/update/', views.update_socials, name= 'patch_social_links'),
+    path('total/imags/', views.get_queryset, name= 'total_image_count'),
 ]
 
 urlpatterns += router.urls

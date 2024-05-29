@@ -11,7 +11,7 @@ from .serializer import *
 from django.contrib.auth.models import AnonymousUser
 from .scrapper import search_pinterest
 from rest_framework.parsers import MultiPartParser
-
+from django.db.models import Count
 
 # Create your views here.
 # 0 = super User 
@@ -216,7 +216,9 @@ def get_images(request):
         for item in image_url_serializer.data:
             data.append(item)
         
-        return Response(data)
+        sorted_data = sorted(data, key=lambda x:x['created_at'], reverse=True)
+
+        return Response(sorted_data)
     elif request.method == "POST":
         id = request.data.get("id")
         is_url = request.data.get("is_url")
@@ -239,4 +241,19 @@ def get_images(request):
             return Response(new_serializer.data)
     else:
         raise Exception("PROBLEM")
+
+
+@api_view(["GET"])
+def get_queryset(request):
+    count =  Image_file.objects.all().count() + Image_url.objects.all().count()
+    image_file_count = Image_file.objects.values("room_type", "source").annotate(count=Count("id"))
+    image_url_count =  Image_url.objects.values("room_type", "source").annotate(count=Count("id"))
+    data = []
+    for item in image_file_count:
+        data.append(item)
+    
+    for item in image_url_count:
+        data.append(item)
+    return Response({"count" : count,
+                     "values": data}, status=200)
 
