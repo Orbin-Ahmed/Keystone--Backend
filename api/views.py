@@ -59,7 +59,6 @@ class UserView(ModelViewSet):
             serializer.validated_data['password'] = password
         serializer.save()
 
-
 class CompanyView(ModelViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
@@ -76,7 +75,6 @@ class CompanyView(ModelViewSet):
             permission_classes = self.permission_classes
         return [permission() for permission in permission_classes]
     
-
 class SocialLinkView(ModelViewSet):
     queryset = Social_link.objects.all()
     serializer_class = SocialLinkGetSerializer
@@ -164,7 +162,6 @@ def image_search_view(request):
     res = search_pinterest(query, page_size, page_number)
     return Response(res, status=200)
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def post_images_url(request):
@@ -242,18 +239,21 @@ def get_images(request):
     else:
         raise Exception("PROBLEM")
 
-
 @api_view(["GET"])
-def get_queryset(request):
+@permission_classes([IsAuthenticated])
+def get_image_count(request):
     count =  Image_file.objects.all().count() + Image_url.objects.all().count()
     image_file_count = Image_file.objects.values("room_type", "source").annotate(count=Count("id"))
     image_url_count =  Image_url.objects.values("room_type", "source").annotate(count=Count("id"))
+
     data = []
+    
     for item in image_file_count:
         data.append(item)
     
     for item in image_url_count:
         data.append(item)
+
     return Response({"count" : count,
                      "values": data}, status=200)
 

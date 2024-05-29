@@ -18,7 +18,6 @@ class UserPostSerializer(serializers.ModelSerializer):
                   'photo'
                   )
 
-
 class UserFetchSerializer(serializers.ModelSerializer):
     photo = serializers.ImageField(max_length=None, allow_null=True, use_url=True, required=False)
 
@@ -73,7 +72,6 @@ class ImageFileSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data['room_type'] = validated_data.get('room_type', '').lower()
         return super().update(instance, validated_data)
-
         
 class ImageURLSerializer(serializers.ModelSerializer):
     class Meta:

@@ -69,15 +69,3 @@ class Image_url(Image):
 #             "new_key": "gagaga",
 #         }
 #     ]
-
-#     [
-#         {
-#             "color": "black",
-#         },
-#         {
-#             "theme": "white",
-#         },
-#         {
-#             "new_key": "gagaga",
-#         }
-#     ]
