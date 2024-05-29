@@ -81,25 +81,7 @@ class SocialLinkView(ModelViewSet):
     permission_classes = [AllowAny]
     http_method_names = ('get')
 
-    # def get_permissions(self):
-    #     if self.action == 'retrieve':
-    #         if(self.request.user==AnonymousUser()):
-    #             permission_classes = [AllowAny]
-    #         else:
-    #             permission_classes = self.permission_classes
-    #     else:
-    #         permission_classes = self.permission_classes
-    #     return [permission() for permission in permission_classes]
-
-    # def get_serializer_class(self):
-    #    if self.action == "retreive":
-    #        return self.serializer_class
-    #    elif self.action == "update" or "create":
-    #        return 
-
-
     def retrieve(self, request, *args, **kwargs):
-        print(kwargs)
         instance = self.queryset.filter(user=kwargs.get("pk"))
         serializer = self.get_serializer(instance, many=True)
         return Response(serializer.data)
@@ -247,7 +229,7 @@ def get_image_count(request):
     image_url_count =  Image_url.objects.values("room_type", "source").annotate(count=Count("id"))
 
     data = []
-    
+
     for item in image_file_count:
         data.append(item)
     
