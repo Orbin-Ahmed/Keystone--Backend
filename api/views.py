@@ -1,3 +1,4 @@
+import json
 from django.contrib.auth import authenticate, login
 from .models import User, Company, Social_link, Image_url, Image_file, Image
 from django.contrib.auth.hashers import make_password
@@ -78,24 +79,44 @@ class CompanyView(ModelViewSet):
 
 class SocialLinkView(ModelViewSet):
     queryset = Social_link.objects.all()
-    serializer_class = SocialLinkSerializer
-    permission_classes = [IsAuthenticated]
-    http_method_names = ('post', 'get', 'patch', 'put')
+    serializer_class = SocialLinkGetSerializer
+    permission_classes = [AllowAny]
+    http_method_names = ('get')
 
-    def get_permissions(self):
-        if self.action == 'retrieve':
-            if(self.request.user==AnonymousUser()):
-                permission_classes = [AllowAny]
-            else:
-                permission_classes = self.permission_classes
-        else:
-            permission_classes = self.permission_classes
-        return [permission() for permission in permission_classes]
+    # def get_permissions(self):
+    #     if self.action == 'retrieve':
+    #         if(self.request.user==AnonymousUser()):
+    #             permission_classes = [AllowAny]
+    #         else:
+    #             permission_classes = self.permission_classes
+    #     else:
+    #         permission_classes = self.permission_classes
+    #     return [permission() for permission in permission_classes]
 
-    def create(self, request, *args, **kwargs):
-        self.request.data['user'] = self.request.user.id
-        return super().create(request, *args, **kwargs)
+    # def get_serializer_class(self):
+    #    if self.action == "retreive":
+    #        return self.serializer_class
+    #    elif self.action == "update" or "create":
+    #        return 
 
+
+    def retrieve(self, request, *args, **kwargs):
+        print(kwargs)
+        instance = self.queryset.filter(user=kwargs.get("pk"))
+        serializer = self.get_serializer(instance, many=True)
+        return Response(serializer.data)
+        
+@api_view(['post'])
+@permission_classes([IsAuthenticated])
+def update_socials(request):
+    the_list = Social_link.objects.filter(user=request.user.id)
+    for each in the_list:
+        each.delete()
+    the_list = []
+    for i in request.data:
+        social_object = Social_link.objects.create(user=request.user, platform=i.get("platform"), link=i.get("link"))
+        the_list.append(social_object)
+    return Response("done", status=200)
 
 @api_view(['post'])
 def login_view(request):

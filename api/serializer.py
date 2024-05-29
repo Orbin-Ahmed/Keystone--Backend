@@ -49,14 +49,14 @@ class CompanySerializer(serializers.ModelSerializer):
                   'logo'
                   )
         
-class SocialLinkSerializer(serializers.ModelSerializer):
+class SocialLinkGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Social_link
         fields = ('id',
                   'user',
                   'platform',
                   'link',
-                  )
+                  )   
         
 class ImageFileSerializer(serializers.ModelSerializer):
     photo= serializers.ImageField(max_length=None, allow_null=True, use_url=True, required=True)
