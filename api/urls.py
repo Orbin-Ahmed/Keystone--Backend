@@ -15,7 +15,7 @@ urlpatterns = [
     path('images/search/', views.image_search_view, name= 'get_images_search_by_keywords'),
     path('images/url/', views.post_images_url, name= 'post_image_by_url'),
     path('images/file/', views.post_image_file, name= 'post_image_by_file'),
-    path('images/', views.get_images, name= 'get_all_image'),
+    path('images/', views.get_images, name= 'get_all_image_update_image'),
 ]
 
 urlpatterns += router.urls

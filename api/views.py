@@ -165,32 +165,57 @@ def post_image_file(request):
     else:
         return Response(serializer.errors, status=400)
     
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def get_images(request):
-    room_type = request.GET.get('room_type')
-    source = request.GET.get('source')
+    if request.method == 'GET':
+        room_type = request.GET.get('room_type')
+        source = request.GET.get('source')
 
-    image_files = Image_file.objects.all()
-    image_urls = Image_url.objects.all()
+        image_files = Image_file.objects.all()
+        image_urls = Image_url.objects.all()
 
-    if room_type:
-        room_type = room_type.lower()
-        image_files = image_files.filter(room_type=room_type)
-        image_urls = image_urls.filter(room_type=room_type)
+        if room_type:
+            room_type = room_type.lower()
+            image_files = image_files.filter(room_type=room_type)
+            image_urls = image_urls.filter(room_type=room_type)
 
-    if source:
-        image_files = image_files.filter(source=source)
-        image_urls = image_urls.filter(source=source)
-    
-    image_file_serializer = ImageFileSerializer(image_files, many=True)
-    image_url_serializer = ImageURLSerializer(image_urls, many=True)
-    
-    data = []
+        if source:
+            image_files = image_files.filter(source=source)
+            image_urls = image_urls.filter(source=source)
+        
+        image_file_serializer = ImageFileSerializer(image_files, many=True)
+        image_url_serializer = ImageURLSerializer(image_urls, many=True)
+        
+        data = []
 
-    for item in image_file_serializer.data:
-        data.append(item)
-    
-    for item in image_url_serializer.data:
-        data.append(item)
-    
-    return Response(data)
+        for item in image_file_serializer.data:
+            data.append(item)
+        
+        for item in image_url_serializer.data:
+            data.append(item)
+        
+        return Response(data)
+    elif request.method == "POST":
+        id = request.data.get("id")
+        is_url = request.data.get("is_url")
+        photo = request.data.get("photo")
+        if is_url is True:
+            the_object = Image_url.objects.get(id=id)
+            serializer = ImageURLSerializer(the_object, data = request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)       
+        else:
+            the_object = Image_file.objects.get(id=id)
+            serializer = ImageFileSerializer(the_object)
+            data = serializer.data.copy()
+            data["photo"] = photo
+            new_serializer = ImageURLSerializer(data=data)
+            new_serializer.is_valid(raise_exception=True)
+            the_object.delete()
+            new_serializer.save()
+            return Response(new_serializer.data)
+    else:
+        raise Exception("PROBLEM")
+
