@@ -33,26 +33,26 @@ DEBUG = str(os.getenv('DEBUG'))
 
 ALLOWED_HOSTS = ["backend-keystone.up.railway.app"]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "https://keystone-dashboard.vercel.app",
-# ]
+CORS_ALLOWED_ORIGINS = [
+    "https://keystone-dashboard.vercel.app",
+]
 
-# CORS_ALLOW_METHODS = [
-#     'GET',
-#     'POST',
-#     'PATCH', 
-#     'OPTIONS',
-# ]
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PATCH', 
+    'OPTIONS',
+]
 
-# CORS_ALLOW_HEADERS = [
-#     'accept',
-#     'authorization',
-#     'content-type',
-#     'body',
-#     'user-agent',
-#     'x-csrftoken',
-#     'x-requested-with',
-# ]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'authorization',
+    'content-type',
+    'body',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Application definition
 
@@ -75,7 +75,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
