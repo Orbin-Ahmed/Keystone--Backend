@@ -1,8 +1,11 @@
 from py3pin.Pinterest import Pinterest
 from .proxy import get_random_proxy
+import os
+
 
 def search_pinterest(query, page_size=30, page_number=1):
-    file_path = "E:/Django/Keystone--Backend/Free_Proxy_List.json"
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    file_path = os.path.join(BASE_DIR, "Free_Proxy_List.json")
     p = get_random_proxy(file_path)
     pinterest = Pinterest(
         email='acantoahmed@hotmail.com',
