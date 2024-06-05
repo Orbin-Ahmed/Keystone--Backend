@@ -31,11 +31,21 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = str(os.getenv('DEBUG'))
 
+# Dev
+# ALLOWED_HOSTS = ["backend-keystone.up.railway.app", "127.0.0.1"]
+
+# CORS_ALLOWED_ORIGINS = [
+#     "https://keystone-dashboard.vercel.app",
+#     "http://localhost:3000"
+# ]
+
+# Production
 ALLOWED_HOSTS = ["backend-keystone.up.railway.app"]
 
 CORS_ALLOWED_ORIGINS = [
     "https://keystone-dashboard.vercel.app",
 ]
+
 
 CORS_ALLOW_METHODS = [
     'GET',

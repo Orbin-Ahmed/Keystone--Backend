@@ -46,26 +46,7 @@ class Image_url(Image):
     photo = models.URLField(max_length=255, blank=True, null = True)
     
 
-# class Image_variant(models.Model):
-#     base_image = models.ForeignKey(Image, on_delete=models.CASCADE)
-#     key_name = models.JSONField(max_length=255, blank=True, null=True)
-#     link_field = models.CharField(max_length=255, blank=True, null=True)
-
-
-#     [
-#         {
-#             "color": "red",
-#         }
-#     ]
-
-#     [
-#         {
-#             "color": "red",
-#         },
-#         {
-#             "theme": "white",
-#         },
-#         {
-#             "new_key": "gagaga",
-#         }
-#     ]
+class Image_variant(models.Model):
+    base_image = models.ForeignKey(Image, on_delete=models.CASCADE)
+    data = models.JSONField(max_length=255, blank=True, null=True)
+    variant_image = models.ImageField(upload_to='pin/', blank=True, null=True)

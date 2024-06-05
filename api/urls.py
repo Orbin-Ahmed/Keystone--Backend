@@ -7,6 +7,7 @@ router = routers.SimpleRouter()
 router.register(r'register', views.UserView, basename='CRUD User')
 router.register(r'company', views.CompanyView, basename='CRUD Comapny Info')
 router.register(r'social', views.SocialLinkView, basename='CRUD Social Info')
+router.register(r'variants', views.ImageVariantView, basename='Get and Post Image variants')
 
 urlpatterns = [
     path('login/', views.login_view, name= 'login'),
@@ -18,6 +19,8 @@ urlpatterns = [
     path('images/', views.get_images, name= 'get_all_image_update_image'),
     path('social/update/', views.update_socials, name= 'update_social_links'),
     path('total/images/', views.get_image_count, name= 'total_image_count'),
+    path('variants/filter/', views.variant_query, name= 'filter_variant_by_key_value'),
+    path('variants/image/', views.Image_list, name= 'get_base_image_list_of_variants'),
 ]
 
 urlpatterns += router.urls

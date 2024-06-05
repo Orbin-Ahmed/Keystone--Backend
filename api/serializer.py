@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Company, Social_link, Image_url, Image, Image_file
+from .models import Image_variant, User, Company, Social_link, Image_url, Image, Image_file
 
 class UserPostSerializer(serializers.ModelSerializer):
     photo = serializers.ImageField(max_length=None, use_url=True, allow_null=True, required=False)
@@ -85,3 +85,10 @@ class ImageURLSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data['room_type'] = validated_data.get('room_type', '').lower()
         return super().update(instance, validated_data)
+    
+class ImageVariantSerializer(serializers.ModelSerializer):
+    variant_image = serializers.ImageField(max_length=None, allow_null=True, use_url=True, required=True)
+
+    class Meta:
+        model = Image_variant
+        fields = ('base_image', 'data', 'variant_image')

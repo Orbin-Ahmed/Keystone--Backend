@@ -12,6 +12,7 @@ from django.contrib.auth.models import AnonymousUser
 from .scrapper import search_pinterest
 from rest_framework.parsers import MultiPartParser
 from django.db.models import Count
+from rest_framework.pagination import LimitOffsetPagination
 
 # Create your views here.
 # 0 = super User 
@@ -86,6 +87,18 @@ class SocialLinkView(ModelViewSet):
         serializer = self.get_serializer(instance, many=True)
         return Response(serializer.data)
         
+class ImageVariantView(ModelViewSet):
+    queryset = Image_variant.objects.all()
+    serializer_class = ImageVariantSerializer
+    permission_classes = [AllowAny]
+    http_method_names = ('post', 'get')
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.queryset.filter(base_image=kwargs.get("pk"))
+        serializer = self.get_serializer(instance, many=True)
+        return Response(serializer.data)
+
+
 @api_view(['post'])
 @permission_classes([IsAuthenticated])
 def update_socials(request):
@@ -196,8 +209,12 @@ def get_images(request):
             data.append(item)
         
         sorted_data = sorted(data, key=lambda x:x['created_at'], reverse=True)
+        sorted_data_length = len(sorted_data)
 
-        return Response(sorted_data)
+        paginator = LimitOffsetPagination()
+        result_page = paginator.paginate_queryset(sorted_data, request)
+
+        return Response({"total": sorted_data_length,"data": result_page}, status=200)
     elif request.method == "POST":
         id = request.data.get("id")
         is_url = request.data.get("is_url")
@@ -219,7 +236,7 @@ def get_images(request):
             new_serializer.save()
             return Response(new_serializer.data)
     else:
-        raise Exception("PROBLEM")
+        return Response({"message": "Update Image Failed!"}, status=400)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -239,3 +256,50 @@ def get_image_count(request):
     return Response({"count" : count,
                      "values": data}, status=200)
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def variant_query(request):
+    image_id = request.GET.get("image_id")
+    key = request.GET.get("key")
+    value = request.GET.get("value")
+    data = Image_variant.objects.filter(base_image = image_id)
+    if value and not key:
+        return Response({"message": "Invalid Variants!"}, status=400)
+    elif not value and not key:
+        return Response({"message": "Invalid Variants!"}, status=400)
+    elif key and not value:
+        data = data.filter(data__has_key = key)
+        serializer = ImageVariantSerializer(data, many=True)
+        return Response(serializer.data, status=200)
+    elif key and value:
+        filter_kwargs = {
+            f'data__{key}': value
+        }
+        data = data.filter(**filter_kwargs)
+        serializer = ImageVariantSerializer(data, many=True)
+        return Response(serializer.data, status=200)        
+        
+    else:
+        return Response({"message": "Invalid Variants!"}, status=400)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def Image_list(request):
+    queryset = Image_variant.objects.all().distinct('base_image_id')
+    image_id_list = []
+    for each in queryset:
+        image_id_list.append(each.base_image)
+    instance_list = []
+    for each in image_id_list:
+        try:
+            data = Image_file.objects.get(id=each.id)
+            serializer = ImageFileSerializer(data)
+        except:
+            data =  Image_url.objects.get(id=each.id)
+            serializer = ImageURLSerializer(data)
+        
+        instance_list.append(serializer.data)
+    
+    return Response(instance_list)
+    
