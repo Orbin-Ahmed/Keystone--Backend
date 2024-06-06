@@ -66,11 +66,13 @@ class ImageFileSerializer(serializers.ModelSerializer):
                   'temperature', 'theme', 'color', 'is_url', 'created_at') 
     
     def create(self, validated_data):
-        validated_data['room_type'] = validated_data.get('room_type', '').lower()
+        if 'room_type' in validated_data:
+            validated_data['room_type'] = validated_data.get('room_type', '').lower()
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        validated_data['room_type'] = validated_data.get('room_type', '').lower()
+        if 'room_type' in validated_data:
+            validated_data['room_type'] = validated_data.get('room_type', '').lower()
         return super().update(instance, validated_data)
         
 class ImageURLSerializer(serializers.ModelSerializer):
@@ -79,11 +81,13 @@ class ImageURLSerializer(serializers.ModelSerializer):
         fields = '__all__'
     
     def create(self, validated_data):
-        validated_data['room_type'] = validated_data.get('room_type', '').lower()
+        if 'room_type' in validated_data:
+            validated_data['room_type'] = validated_data.get('room_type', '').lower()
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        validated_data['room_type'] = validated_data.get('room_type', '').lower()
+        if 'room_type' in validated_data:
+            validated_data['room_type'] = validated_data.get('room_type', '').lower()
         return super().update(instance, validated_data)
     
 class ImageVariantSerializer(serializers.ModelSerializer):
