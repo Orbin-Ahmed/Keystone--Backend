@@ -39,7 +39,6 @@ DEBUG = str(os.getenv('DEBUG'))
 #     "http://localhost:3000"
 # ]
 
-
 # Production
 ALLOWED_HOSTS = ["backend-keystone.up.railway.app"]
 

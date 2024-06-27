@@ -13,6 +13,7 @@ from .scrapper import search_pinterest
 from rest_framework.parsers import MultiPartParser
 from django.db.models import Count
 from rest_framework.pagination import LimitOffsetPagination
+from .houzz import scrape_houzz_images
 
 # Create your views here.
 # 0 = super User 
@@ -303,3 +304,18 @@ def Image_list(request):
     
     return Response(instance_list)
     
+@api_view(['get'])
+@permission_classes([IsAuthenticated])
+def get_houzz_images(request):
+    try:
+        keyword = request.query_params.get('query')
+        page = int(request.query_params.get('page_number'))
+    except:
+        return Response("Query params missing", status=400)
+    
+    images = scrape_houzz_images(keyword, page)
+    json_response = {
+        "images": images
+    }
+    
+    return Response(json_response, status=200)
