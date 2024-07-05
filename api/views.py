@@ -91,7 +91,7 @@ class SocialLinkView(ModelViewSet):
 class ImageVariantView(ModelViewSet):
     queryset = Image_variant.objects.all()
     serializer_class = ImageVariantSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     http_method_names = ('post', 'get')
     
     def retrieve(self, request, *args, **kwargs):
@@ -282,7 +282,6 @@ def variant_query(request):
         
     else:
         return Response({"message": "Invalid Variants!"}, status=400)
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

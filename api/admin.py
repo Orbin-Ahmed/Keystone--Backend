@@ -22,9 +22,13 @@ class PasswordTokenAdmin(admin.ModelAdmin):
 class SocialLinkAdmin(admin.ModelAdmin):
     pass
 
+class VariantBaseAdmin(admin.ModelAdmin):
+    pass
+
 
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Image_file, ImageFileAdmin)
 admin.site.register(models.Image_url, ImageURLAdmin)
 admin.site.register(models.Social_link, SocialLinkAdmin)
+admin.site.register(models.Image_variant, VariantBaseAdmin)
 admin.site.unregister(Group)
