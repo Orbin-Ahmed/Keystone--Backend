@@ -16,7 +16,7 @@ import os
 import dj_database_url
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-load_dotenv(dotenv_path)
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,7 +43,7 @@ DEBUG = str(os.getenv('DEBUG'))
 ALLOWED_HOSTS = ["backend-keystone.up.railway.app"]
 
 CORS_ALLOWED_ORIGINS = [
-    "https://keystone-dashboard.vercel.app",
+    "https://idealhome-ui.up.railway.app",
 ]
 
 
