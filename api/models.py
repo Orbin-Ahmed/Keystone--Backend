@@ -30,9 +30,7 @@ class Image(models.Model):
     source = models.CharField(max_length=255, null=True, blank=True)
     nationality = models.CharField(max_length=255, null=True, blank=True)
     room_type = models.CharField(max_length=255, null=True, blank=True)
-    temperature = models.CharField(max_length=255, null=True, blank=True)
     theme = models.CharField(max_length=255, null=True, blank=True)
-    color = models.CharField(max_length=255, null=True, blank=True)
     is_url = models.BooleanField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 

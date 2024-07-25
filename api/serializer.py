@@ -63,7 +63,7 @@ class ImageFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image_file
         fields = ('id', 'photo', 'source', 'nationality', 'room_type',
-                  'temperature', 'theme', 'color', 'is_url', 'created_at') 
+                   'theme',  'is_url', 'created_at') 
     
     def create(self, validated_data):
         if 'room_type' in validated_data:
