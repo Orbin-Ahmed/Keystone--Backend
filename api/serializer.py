@@ -62,7 +62,7 @@ class ImageFileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Image_file
-        fields = ('id', 'photo', 'source', 'nationality', 'room_type',
+        fields = ('id', 'photo', 'source', 'nationality', 'room_type', 'style', 'object_type', 'is_object',
                    'theme',  'is_url', 'created_at') 
     
     def create(self, validated_data):
