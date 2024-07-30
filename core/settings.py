@@ -36,7 +36,7 @@ DEBUG = str(os.getenv('DEBUG'))
 # ALLOWED_HOSTS = ["keystone-backend.up.railway.app", "127.0.0.1"]
 
 # CORS_ALLOWED_ORIGINS = [
-#     "https://idealhomeuae.up.railway.app",
+#     "https://www.idealhomeuae.com",
 #     "http://localhost:3000"
 # ]
 
@@ -44,7 +44,7 @@ DEBUG = str(os.getenv('DEBUG'))
 ALLOWED_HOSTS = ["keystone-backend.up.railway.app"]
 
 CORS_ALLOWED_ORIGINS = [
-    "https://idealhomeuae.up.railway.app",
+    "https://www.idealhomeuae.com",
 ]
 
 
