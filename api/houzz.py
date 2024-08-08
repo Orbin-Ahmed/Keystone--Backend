@@ -1,7 +1,20 @@
 import requests
 from bs4 import BeautifulSoup
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-def scrape_houzz_images(keyword: str, page: int):
+def fetch_detail_image(detail_url, headers):
+    detail_response = requests.get(detail_url, headers=headers)
+    if detail_response.status_code != 200:
+        print(f"Failed to retrieve detail page. Status code: {detail_response.status_code}")
+        return None
+
+    detail_soup = BeautifulSoup(detail_response.content, 'html.parser')
+    image = detail_soup.find('img', class_='view-photo-image-pane__image')
+    if image and 'src' in image.attrs:
+        return image['src']
+    return None
+
+def scrape_houzz_images(keyword: str, page: int, max_workers=10):
     base_url = "https://www.houzz.com/photos/query/"
     search_url = f"{base_url}{keyword}/nQRvCq/p/{page}/"
     
@@ -16,8 +29,18 @@ def scrape_houzz_images(keyword: str, page: int):
         return []
 
     soup = BeautifulSoup(response.content, 'html.parser')
-    images = soup.find_all('img', class_='hz-photo-card__img')
+    image_objects = soup.find_all('a', class_='hz-photo-card__ratio-box')
 
-    image_urls = [img['src'] for img in images if 'src' in img.attrs]
+    image_urls = []
+
+    detail_urls = [img_obj['href'] for img_obj in image_objects]
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_url = {executor.submit(fetch_detail_image, url, headers): url for url in detail_urls}
+
+        for future in as_completed(future_to_url):
+            image_url = future.result()
+            if image_url:
+                image_urls.append(image_url)
 
     return image_urls
