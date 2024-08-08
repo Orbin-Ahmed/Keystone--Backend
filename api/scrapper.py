@@ -10,9 +10,10 @@ def search_pinterest(query, page_size=30, page_number=1, desired_count=20):
         email='acantoahmed@hotmail.com',
         password='Pranto@123',
         username='acantoahmed3898',
+        cred_root='cred_root',
         proxies=p,
     )
-
+    # pinterest.login()
     all_results = []
     current_page = 1
 
