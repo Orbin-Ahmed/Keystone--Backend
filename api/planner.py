@@ -6,8 +6,10 @@ from .helper import ensure_model_exists
 
 def detect_walls_and_shapes_in_image(image_file):
     try:
-        wall_model_path = '../best_wall_7k_100.pt'
-        shape_model_path = '../best_1600_box_100.pt'
+        # wall_model_path = '../best_wall_7k_100.pt'
+        # shape_model_path = '../best_1600_box_100.pt'
+        wall_model_path = 'checkpoints/best_wall_7k_100.pt'
+        shape_model_path = 'checkpoints/best_1600_box_100.pt'
         wall_model = YOLO(wall_model_path)
         uploaded_image = Image.open(image_file)
         wall_res = wall_model.predict(uploaded_image, conf=0.1)
