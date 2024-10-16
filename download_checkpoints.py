@@ -6,7 +6,7 @@ CHECKPOINTS = {
     'best_wall_7k_100.pt': 'https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_wall_7k_100.pt',
 }
 
-CHECKPOINT_DIR = 'checkpoints'
+CHECKPOINT_DIR = os.path.join('api', 'checkpoints')
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
 for filename, url in CHECKPOINTS.items():
