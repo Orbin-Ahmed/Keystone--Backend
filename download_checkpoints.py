@@ -14,6 +14,7 @@ for filename, url in CHECKPOINTS.items():
     if not os.path.exists(file_path):
         print(f'Downloading {filename} from {url}')
         response = requests.get(url, stream=True)
+        print(f'Status Code: {response.status_code}')
         response.raise_for_status()
         with open(file_path, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
