@@ -28,11 +28,12 @@ EXPOSE 8000
 ENV PYTHONUNBUFFERED=1
 
 # Download the checkpoint files
-RUN mkdir -p /app/api/checkpoints && \
-    curl -L -o /app/api/checkpoints/best_1600_box_100.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_1600_box_100.pt && \
-    curl -L -o /app/api/checkpoints/best_wall_7k_100.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_wall_7k_100.pt
+# RUN mkdir -p /app/api/checkpoints && \
+#     curl -L -o /app/api/checkpoints/best_1600_box_100.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_1600_box_100.pt && \
+#     curl -L -o /app/api/checkpoints/best_wall_7k_100.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_wall_7k_100.pt
 
 # Collect static files, apply migrations, and start Gunicorn
 CMD ["sh", "-c", "python manage.py collectstatic --noinput && \
                    python manage.py migrate --noinput && \
+                   python download_checkpoints.py && \
                    gunicorn core.wsgi:application --bind 0.0.0.0:8000"]
