@@ -30,4 +30,5 @@ ENV PYTHONUNBUFFERED=1
 # Collect static files, apply migrations, and start Gunicorn
 CMD ["sh", "-c", "python manage.py collectstatic --noinput && \
                    python manage.py migrate --noinput && \
+                   python download_checkpoints.py && \
                    gunicorn core.wsgi:application --bind 0.0.0.0:8000"]
