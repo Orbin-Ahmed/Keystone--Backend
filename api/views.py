@@ -14,6 +14,7 @@ from rest_framework.parsers import MultiPartParser
 from django.db.models import Count
 from rest_framework.pagination import LimitOffsetPagination
 from .houzz import scrape_houzz_images
+from .planner import detect_walls_and_shapes_in_image
 
 # Create your views here.
 # 0 = super User 
@@ -318,3 +319,12 @@ def get_houzz_images(request):
     }
     
     return Response(json_response, status=200)
+
+@api_view(['post'])
+def shapes_and_wall_detection_api(request):
+    if request.method == 'POST' and 'image' in request.FILES:
+        image_file = request.FILES['image']
+        result_json = detect_walls_and_shapes_in_image(image_file)
+        return Response(json.loads(result_json), status=200)
+
+    return Response({"error": "Please provide an image."}, status=400)
