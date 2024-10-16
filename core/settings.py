@@ -32,7 +32,7 @@ SECRET_KEY = str(os.getenv('SECRET_KEY'))
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = str(os.getenv('DEBUG'))
 
-# Dev
+# Development
 # ALLOWED_HOSTS = ["keystone-backend.up.railway.app", "127.0.0.1"]
 
 # CORS_ALLOWED_ORIGINS = [
