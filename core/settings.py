@@ -188,11 +188,6 @@ DATABASES = {
         default=os.getenv("DATABASE_URL"),
         conn_max_age=60,
         conn_health_checks=True,
-        options={
-            'MAX_CONNS': 20,
-            'POOL_SIZE': 5,
-            'POOL_TIMEOUT': 30,
-        }
     )
 }
 
