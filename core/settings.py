@@ -40,7 +40,7 @@ DEBUG = str(os.getenv('DEBUG'))
 #     "http://localhost:3000"
 # ]
 
-# Production
+# Production ENV
 ALLOWED_HOSTS = ["keystone-backend.up.railway.app"]
 
 CORS_ALLOWED_ORIGINS = [
