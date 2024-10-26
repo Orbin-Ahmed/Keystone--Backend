@@ -14,6 +14,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import dj_database_url
+import sys
+import logging
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv()
@@ -95,26 +97,30 @@ MIDDLEWARE = [
     'core.middleware.RailwayMemoryMiddleware',
 ]
 
+# Replace your existing logging configuration with this
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'railway': {
-            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        'verbose': {
+            'format': '[{levelname}] {asctime} - {message}',
+            'style': '{',
         },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'stream': sys.stdout,
-            'formatter': 'railway',
+            'formatter': 'verbose',
         },
     },
     'loggers': {
         'railway_memory': {
             'handlers': ['console'],
             'level': 'INFO',
-            'propagate': True,
+        },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
         },
     },
 }

@@ -17,9 +17,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     libpq-dev \
     build-essential \
+    python3-dev \
     curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy only requirements first to leverage Docker cache
 COPY requirements.txt .
