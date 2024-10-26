@@ -3,14 +3,17 @@ import json
 from PIL import Image
 import math
 import os
+import pytesseract
+import cv2
+import numpy as np
 
 def detect_walls_and_shapes_in_image(image_file):
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # wall_model_path = '../best_wall_7k_100.pt'
-        # shape_model_path = '../best_1600_box_100.pt'
-        wall_model_path = os.path.join(current_dir, 'checkpoints', 'best_wall_7k_100.pt')
-        shape_model_path = os.path.join(current_dir, 'checkpoints', 'best_1600_box_100.pt')
+        wall_model_path = '../best_wall_7k_100.pt'
+        shape_model_path = '../best_1600_box_100.pt'
+        # wall_model_path = os.path.join(current_dir, 'checkpoints', 'best_wall_7k_100.pt')
+        # shape_model_path = os.path.join(current_dir, 'checkpoints', 'best_1600_box_100.pt')
         wall_model = YOLO(wall_model_path)
         uploaded_image = Image.open(image_file)
         wall_res = wall_model.predict(uploaded_image, conf=0.1)
@@ -36,9 +39,12 @@ def detect_walls_and_shapes_in_image(image_file):
             shape_filtered_boxes, wall_lines_json["lines"], shape_model
         )
         
+        room_names_json = detect_room_names(uploaded_image)
+        
         result = {
             "lines": wall_lines_json["lines"],
-            "shapes": shapes_json["shapes"]
+            "shapes": shapes_json["shapes"],
+            "roomNames": room_names_json,
         }
         
         return json.dumps(result, indent=4)
@@ -276,3 +282,38 @@ def remove_redundant_walls(wall_lines, proximity_threshold):
             filtered_walls.append(wall_lines[i])
 
     return filtered_walls
+
+def detect_room_names(image):
+    open_cv_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    gray = cv2.cvtColor(open_cv_image, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)
+    data = pytesseract.image_to_data(thresh, output_type=pytesseract.Output.DICT)
+    common_room_names = {
+        "KITCHEN", "BEDROOM", "DINING", "BATHROOM", "LIVING", "KID'S ROOM",
+        "MASTER BEDROOM", "GUEST ROOM", "STUDY", "HALL", "OFFICE", "GARAGE",
+        "STORE", "PANTRY", "LAUNDRY", "BALCONY", "TOILET", "MAJLIS", "LOBBY",
+        "ENTRANCE", "WOMEN'S DINING", "WOMEN'S MAJLIS", "MEN'S MAJLIS", 
+        "LIVING ROOM", "BATH", "TERRACE", "ENTRANCE"
+    }
+    
+    common_room_names_lower = {name.lower() for name in common_room_names}
+    
+    rooms = []
+    
+    for i in range(len(data['text'])):
+        text = data['text'][i].strip()
+        text_upper = text.upper()
+        text_lower = text.lower()
+        if text_upper in common_room_names or text_lower in common_room_names_lower:
+            x = data['left'][i]
+            y = data['top'][i]
+            width = data['width'][i]
+            height = data['height'][i]
+            x_center = x + width / 2
+            y_center = y + height / 2
+            rooms.append({
+                "x": x_center,
+                "y": y_center,
+                "name": text_upper
+            })
+    return rooms

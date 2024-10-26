@@ -36,3 +36,4 @@ whitenoise==6.6.0
 wsproto==1.2.0
 ultralytics
 psutil==6.0.0
+pytesseract==0.3.13

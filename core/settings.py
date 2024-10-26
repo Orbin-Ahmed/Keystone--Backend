@@ -131,14 +131,6 @@ REST_FRAMEWORK = {
     )
 }
 
-# DATABASES = {
-#     'default': dj_database_url.config(
-#        default=os.getenv("DATABASE_URL"),
-#         conn_max_age=60,
-#         conn_health_checks=True
-#     )
-# }
-
 # Memory optimization settings
 CACHES = {
     'default': {
