@@ -295,16 +295,18 @@ def detect_room_names(image):
         "ENTRANCE", "WOMEN'S DINING", "WOMEN'S MAJLIS", "MEN'S MAJLIS", 
         "LIVING ROOM", "BATH", "TERRACE", "ENTRANCE"
     }
-    
-    common_room_names_lower = {name.lower() for name in common_room_names}
-    
+
     rooms = []
-    
-    for i in range(len(data['text'])):
+    i = 0
+    while i < len(data['text']):
         text = data['text'][i].strip()
+        if not text:
+            i += 1
+            continue
+
+        # single-word match
         text_upper = text.upper()
-        text_lower = text.lower()
-        if text_upper in common_room_names or text_lower in common_room_names_lower:
+        if text_upper in common_room_names:
             x = data['left'][i]
             y = data['top'][i]
             width = data['width'][i]
@@ -316,4 +318,35 @@ def detect_room_names(image):
                 "y": y_center,
                 "name": text_upper
             })
+            i += 1
+            continue
+
+        # Check for multi-word matches
+        combined_text = text_upper
+        x_min = data['left'][i]
+        y_min = data['top'][i]
+        width_total = data['width'][i]
+        
+        j = i + 1
+        while j < len(data['text']) and data['text'][j].strip():
+            next_text = data['text'][j].strip().upper()
+            combined_text += " " + next_text
+            
+            if combined_text in common_room_names:
+                x_max = data['left'][j] + data['width'][j]
+                width_total = x_max - x_min
+                height_total = max(data['height'][i:j+1])
+                x_center = x_min + width_total / 2
+                y_center = y_min + height_total / 2
+                rooms.append({
+                    "x": x_center,
+                    "y": y_center,
+                    "name": combined_text
+                })
+                i = j
+                break
+            
+            j += 1
+        i += 1
+    
     return rooms
