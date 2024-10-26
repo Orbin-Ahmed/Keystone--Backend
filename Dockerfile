@@ -1,6 +1,13 @@
 # Use an official Python runtime as a parent image
 FROM python:3.11-slim
 
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+# Add memory limiting environment variables
+ENV MALLOC_ARENA_MAX=2
+ENV PYTHONMALLOC=malloc
+
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -11,29 +18,39 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     build-essential \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Copy the requirements file into the container at /app
+# Copy only requirements first to leverage Docker cache
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with pip optimization flags
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip cache purge
 
-# Copy the rest of your application code into the container at /app
+# Create directory for checkpoints
+RUN mkdir -p /app/api/checkpoints
+
+# Download checkpoint files more efficiently
+RUN cd /app/api/checkpoints && \
+    curl -L -o best_1600_box_100.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_1600_box_100.pt && \
+    curl -L -o best_wall_7k_100.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_wall_7k_100.pt
+
+# Copy the rest of your application code
 COPY . .
 
-# Expose the port that Gunicorn will run on (default is 8000)
+# Expose the port that Gunicorn will run on
 EXPOSE 8000
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-
-# Download the checkpoint files
-RUN mkdir -p /app/api/checkpoints && \
-    curl -L -o /app/api/checkpoints/best_1600_box_100.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_1600_box_100.pt && \
-    curl -L -o /app/api/checkpoints/best_wall_7k_100.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_wall_7k_100.pt
-
-# Collect static files, apply migrations, and start Gunicorn
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && \
-                   python manage.py migrate --noinput && \
-                   gunicorn core.wsgi:application --bind 0.0.0.0:8000"]
+# Start command with optimized Gunicorn settings
+CMD ["sh", "-c", "\
+    python manage.py collectstatic --noinput && \
+    python manage.py migrate --noinput && \
+    gunicorn core.wsgi:application \
+    --bind 0.0.0.0:8000 \
+    --workers 2 \
+    --threads 2 \
+    --worker-class=gthread \
+    --worker-tmp-dir=/dev/shm \
+    --max-requests 1000 \
+    --max-requests-jitter 50"]

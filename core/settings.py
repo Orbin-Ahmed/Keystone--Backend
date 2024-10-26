@@ -92,7 +92,32 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.RailwayMemoryMiddleware',
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'railway': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'stream': sys.stdout,
+            'formatter': 'railway',
+        },
+    },
+    'loggers': {
+        'railway_memory': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+    },
+}
 
 ROOT_URLCONF = 'core.urls'
 
@@ -131,11 +156,37 @@ REST_FRAMEWORK = {
     )
 }
 
+# DATABASES = {
+#     'default': dj_database_url.config(
+#        default=os.getenv("DATABASE_URL"),
+#         conn_max_age=60,
+#         conn_health_checks=True
+#     )
+# }
+
+# Memory optimization settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    }
+}
+
+# Optimize database settings - add these options to your existing DATABASES config
 DATABASES = {
     'default': dj_database_url.config(
-       default=os.getenv("DATABASE_URL"),
+        default=os.getenv("DATABASE_URL"),
         conn_max_age=60,
-        conn_health_checks=True
+        conn_health_checks=True,
+        options={
+            'MAX_CONNS': 20,
+            'POOL_SIZE': 5,
+            'POOL_TIMEOUT': 30,
+        }
     )
 }
 
