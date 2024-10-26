@@ -8,6 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV MALLOC_ARENA_MAX=2
 ENV PYTHONMALLOC=malloc
 ENV TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
+ENV LC_ALL=C
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -22,8 +23,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     tesseract-ocr \
     libtesseract-dev \
-    tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
+
+
+RUN mkdir -p /usr/share/tesseract-ocr/4.00/tessdata && \
+    curl -L -o /usr/share/tesseract-ocr/4.00/tessdata/eng.traineddata \
+    https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata
 
 # Copy only requirements first to leverage Docker cache
 COPY requirements.txt .
