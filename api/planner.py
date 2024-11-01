@@ -6,6 +6,7 @@ import os
 import pytesseract
 import cv2
 import numpy as np
+from uuid import uuid4
 
 def detect_walls_and_shapes_in_image(image_file):
     try:
@@ -60,16 +61,19 @@ def extract_wall_lines(filtered_boxes):
         width = abs(x_max - x_min)
         height = abs(y_max - y_min)
         thickness = min(width, height) if min(width, height) > 0 else 8
+        id = str(uuid4())
 
         if width > height:
             y_middle = (y_max + y_min) / 2
             wall_lines.append({
+                "id": id,
                 "points": [x_min, y_middle, x_max, y_middle],
                 "thickness": thickness if thickness < 0 else 8
             })
         else:
             x_middle = (x_max + x_min) / 2
             wall_lines.append({
+                "id": id,
                 "points": [x_middle, y_max, x_middle, y_min],
                 "thickness": thickness if thickness < 0 else 8
             })
@@ -86,6 +90,7 @@ def merge_overlapping_walls(wall_lines, alignment_threshold):
         current_wall = wall_lines.pop(0)
         x_start, y_start, x_end, y_end = current_wall["points"]
         thickness = current_wall["thickness"]
+        id = current_wall["id"]
         is_horizontal = abs(x_end - x_start) > abs(y_end - y_start)
         merged = True
 
@@ -120,6 +125,7 @@ def merge_overlapping_walls(wall_lines, alignment_threshold):
             wall_lines = new_wall_lines
 
         merged_walls.append({
+            "id": id,
             "points": [x_start, y_start, x_end, y_end],
             "thickness": thickness
         })
@@ -149,23 +155,24 @@ def extract_shapes(filtered_boxes, wall_lines, shape_model):
 
         x_center = (x_min + x_max) / 2
         y_center = (y_min + y_max) / 2
-        wall_index = find_closest_wall_index(x_center, y_center, wall_lines)
+        wall_id = find_closest_wall_id(x_center, y_center, wall_lines)
         
         shape = align_shape_to_wall({
+            "id": str(uuid4()),
             "type": shape_type,
             "x": x_center,
             "y": y_center,
             "width": width,
             "height": height,
             "image": image
-        }, wall_lines, wall_index)
+        }, wall_lines, wall_id)
 
         shapes.append(shape)
 
     return {"shapes": shapes}
 
-def align_shape_to_wall(shape, wall_lines, wall_index):
-    wall = wall_lines[wall_index]
+def align_shape_to_wall(shape, wall_lines, wall_id):
+    wall = next(wall for wall in wall_lines if wall["id"] == wall_id)
     x1, y1, x2, y2 = wall["points"]
     angle_radians = calculate_wall_angle(x1, y1, x2, y2)
     angle_degrees = math.degrees(angle_radians)
@@ -179,22 +186,22 @@ def align_shape_to_wall(shape, wall_lines, wall_index):
 
     shape["x"] = x_closest - 5
     shape["y"] = y_closest
-    shape["wallIndex"] = wall_index
 
     return shape
 
-def find_closest_wall_index(x, y, wall_lines):
+def find_closest_wall_id(x, y, wall_lines):
     min_distance = None
-    wall_index = None
+    closest_wall_id = None
 
-    for i, wall in enumerate(wall_lines):
+    for wall in wall_lines:
         x1, y1, x2, y2 = wall["points"]
         distance = point_to_line_distance(x, y, x1, y1, x2, y2)
         if min_distance is None or distance < min_distance:
             min_distance = distance
-            wall_index = i
+            closest_wall_id = wall["id"]
+    
 
-    return wall_index
+    return closest_wall_id
 
 def point_to_line_distance(x0, y0, x1, y1, x2, y2):
     dx = x2 - x1
@@ -258,18 +265,16 @@ def remove_redundant_walls(wall_lines, proximity_threshold):
             is_horizontal_j = abs(x2_end - x2_start) > abs(y2_end - y2_start)
             length_j = math.hypot(x2_end - x2_start, y2_end - y2_start)
 
-            # Check for same orientation and proximity
             if is_horizontal_i == is_horizontal_j:
-                if is_horizontal_i:  # For horizontal walls
+                if is_horizontal_i: 
                     if (abs(y1_start - y2_start) <= proximity_threshold and
                         ((x1_start <= x2_end <= x1_end) or (x2_start <= x1_end <= x2_end) or 
                          (abs(x1_start - x2_start) <= proximity_threshold or abs(x1_end - x2_end) <= proximity_threshold))):
-                            # Mark the smaller or redundant wall for removal
                             if length_i >= length_j:
                                 skip_indices.add(j)
                             else:
                                 skip_indices.add(i)
-                else:  # For vertical walls
+                else: 
                     if (abs(x1_start - x2_start) <= proximity_threshold and
                         ((y1_start <= y2_end <= y1_end) or (y2_start <= y1_end <= y2_end) or 
                          (abs(y1_start - y2_start) <= proximity_threshold or abs(y1_end - y2_end) <= proximity_threshold))):

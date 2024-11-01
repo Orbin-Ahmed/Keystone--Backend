@@ -324,7 +324,7 @@ def get_houzz_images(request):
 def shapes_and_wall_detection_api(request):
     if request.method == 'POST' and 'image' in request.FILES:
         image_file = request.FILES['image']
-        result_json = detect_walls_and_shapes_in_image(image_file)
-        return Response(json.loads(result_json), status=200)
+        res = detect_walls_and_shapes_in_image(image_file)
+        return Response(json.loads(res), status=200)
 
     return Response({"error": "Please provide an image."}, status=400)

@@ -37,3 +37,4 @@ wsproto==1.2.0
 ultralytics
 psutil==6.0.0
 pytesseract==0.3.13
+uuid-utils==0.9.0
