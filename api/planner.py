@@ -11,8 +11,6 @@ from uuid import uuid4
 def detect_walls_and_shapes_in_image(image_file):
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # wall_model_path = '../best_wall_7k_100.pt'
-        # shape_model_path = '../best_1600_box_100.pt'
         wall_model_path = os.path.join(current_dir, 'checkpoints', 'best_wall_7k_100.pt')
         shape_model_path = os.path.join(current_dir, 'checkpoints', 'best_1600_box_100.pt')
         wall_model = YOLO(wall_model_path)
@@ -164,7 +162,8 @@ def extract_shapes(filtered_boxes, wall_lines, shape_model):
             "y": y_center,
             "width": width,
             "height": height,
-            "image": image
+            "image": image,
+            "wallId": wall_id
         }, wall_lines, wall_id)
 
         shapes.append(shape)
@@ -199,7 +198,6 @@ def find_closest_wall_id(x, y, wall_lines):
         if min_distance is None or distance < min_distance:
             min_distance = distance
             closest_wall_id = wall["id"]
-    
 
     return closest_wall_id
 
