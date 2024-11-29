@@ -15,6 +15,8 @@ from django.db.models import Count
 from rest_framework.pagination import LimitOffsetPagination
 from .houzz import scrape_houzz_images
 from .planner import detect_walls_and_shapes_in_image
+from pdf2image import convert_from_bytes
+from io import BytesIO
 
 # Create your views here.
 # 0 = super User 
@@ -320,11 +322,31 @@ def get_houzz_images(request):
     
     return Response(json_response, status=200)
 
-@api_view(['post'])
+@api_view(['POST'])
 def shapes_and_wall_detection_api(request):
-    if request.method == 'POST' and 'image' in request.FILES:
-        image_file = request.FILES['image']
-        res = detect_walls_and_shapes_in_image(image_file)
-        return Response(json.loads(res), status=200)
+    if request.method == 'POST':
+        if 'image' in request.FILES:
+            image_file = request.FILES['image']
+            if image_file.content_type.startswith('image/'):
+                res = detect_walls_and_shapes_in_image(image_file)
+                return Response(json.loads(res), status=200)
+            elif image_file.content_type == 'application/pdf':
+                pdf_bytes = image_file.read()
+                images = convert_from_bytes(pdf_bytes)
 
-    return Response({"error": "Please provide an image."}, status=400)
+                combined_results = {}
+                for page_number, image in enumerate(images, start=1):
+                    image_bytes = BytesIO()
+                    image.save(image_bytes, format='JPEG')
+                    image_bytes.seek(0)
+
+                    page_result = detect_walls_and_shapes_in_image(image_bytes)
+                    floor_key = f"Floor {page_number}"
+                    combined_results[floor_key] = json.loads(page_result)
+                    print(f"Processed {floor_key}")
+
+                return Response(combined_results, status=200)
+
+        return Response({"error": "Unsupported file type. Please provide an image or a PDF."}, status=400)
+
+    return Response({"error": "Invalid request method."}, status=405)
