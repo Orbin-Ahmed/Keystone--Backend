@@ -23,6 +23,8 @@ urlpatterns = [
     path('variants/filter/', views.variant_query, name= 'filter_variant_by_key_value'),
     path('variants/image/', views.Image_list, name= 'get_base_image_list_of_variants'),
     path('detect-walls-shapes/', views.shapes_and_wall_detection_api, name= 'detect_wall_by_providing_floor_image'),
+    path("create-prediction/", views.create_or_update_prediction, name="create_or_update"),
+    path("get-image-url/", views.get_image_url, name="get_image_url"),
 ]
 
 urlpatterns += router.urls

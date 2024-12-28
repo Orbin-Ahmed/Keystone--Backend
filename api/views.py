@@ -17,6 +17,10 @@ from .houzz import scrape_houzz_images
 from .planner import detect_walls_and_shapes_in_image
 from pdf2image import convert_from_bytes
 from io import BytesIO
+from .models import ImagePrediction
+from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
 # Create your views here.
 # 0 = super User 
@@ -350,3 +354,52 @@ def shapes_and_wall_detection_api(request):
         return Response({"error": "Unsupported file type. Please provide an image or a PDF."}, status=400)
 
     return Response({"error": "Invalid request method."}, status=405)
+
+@csrf_exempt
+def create_or_update_prediction(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        if "imageID" in data and "prediction1ID" in data:
+            imageID = data["imageID"]
+            prediction1ID = data["prediction1ID"]
+            obj = ImagePrediction.objects.create(imageID=imageID, prediction1ID=prediction1ID)
+            return JsonResponse({"message": "Row created", "id": obj.id}, status=201)
+
+        elif "prediction1ID" in data and "prediction2ID" in data:
+            prediction1ID = data["prediction1ID"]
+            prediction2ID = data["prediction2ID"]
+            obj = get_object_or_404(ImagePrediction, prediction1ID=prediction1ID)
+            obj.prediction2ID = prediction2ID
+            obj.save()
+            return JsonResponse({"message": "Row updated with prediction2ID"}, status=200)
+
+        elif "prediction2ID" in data and "imageURL" in data:
+            prediction2ID = data["prediction2ID"]
+            imageURL = data["imageURL"]
+            obj = get_object_or_404(ImagePrediction, prediction2ID=prediction2ID)
+            obj.imageURL = imageURL
+            obj.save()
+            return JsonResponse({"message": "Row updated with imageURL"}, status=200)
+
+        return JsonResponse({"error": "Invalid data"}, status=400)
+
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+@csrf_exempt
+def get_image_url(request):
+    if request.method == "GET":
+        imageID = request.GET.get("imageID")
+
+        if not imageID:
+            return JsonResponse({"error": "imageID is required"}, status=400)
+
+        obj = ImagePrediction.objects.filter(imageID=imageID).first()
+
+        if not obj:
+            return JsonResponse({"error": "No record found"}, status=404)
+
+        return JsonResponse({"imageURL": obj.imageURL if obj.imageURL else "pending"}, status=200)
+
+    return JsonResponse({"error": "Method not allowed"}, status=405)

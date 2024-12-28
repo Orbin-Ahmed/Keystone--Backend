@@ -51,3 +51,12 @@ class Image_variant(models.Model):
     base_image = models.ForeignKey(Image, on_delete=models.CASCADE)
     data = models.JSONField(max_length=255, blank=True, null=True)
     variant_image = models.ImageField(upload_to='pin/', blank=True, null=True)
+    
+class ImagePrediction(models.Model):
+    imageID = models.CharField(max_length=255, null=True, blank=True)
+    prediction1ID = models.CharField(max_length=255, null=True, blank=True)
+    prediction2ID = models.CharField(max_length=255, null=True, blank=True)
+    imageURL = models.URLField(max_length=500, null=True, blank=True)
+
+    def __str__(self):
+        return f"ImagePrediction(imageID={self.imageID}, prediction1ID={self.prediction1ID})"

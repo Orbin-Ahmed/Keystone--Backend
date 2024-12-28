@@ -37,7 +37,8 @@ DEBUG = str(os.getenv('DEBUG'))
 
 # CORS_ALLOWED_ORIGINS = [
 #     "https://www.idealhomeuae.com",
-#     "http://localhost:3000"
+#     "http://localhost:3000",
+#     "https://0d21-2603-7000-c7f0-a340-f79a-fcae-6a6-c11d.ngrok-free.app"
 # ]
 
 # Production ENV
