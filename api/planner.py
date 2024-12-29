@@ -30,21 +30,14 @@ def detect_walls_and_shapes_in_image(image_file):
         uploaded_image.save(buffered, format="JPEG")
         encoded_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
         
-        url = "https://detect.roboflow.com/wall-detection-by-orbin/4?api_key=xiUZdGv8HlJRS3BxzY4O&overlap=0.50&confidence=0.2"
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        data = f"image={encoded_image}"
-        
-        response = requests.post(url, headers=headers, data=data)
-        if response.status_code != 200:
-            raise Exception(
-                f"Wall detection API returned status code {response.status_code}"
-            )
-            
-        wall_data = response.json()
-        predictions = wall_data.get("predictions", [])
+        rf = Roboflow(api_key="xiUZdGv8HlJRS3BxzY4O")
+        project = rf.workspace().project("wall-detection-by-orbin")
+        model = project.version(4).model
+        prediction = model.predict("your_image.jpg", confidence=20, overlap=50)
+        print(prediction.json())
         
         wall_filtered_boxes = []
-        for pred in predictions:
+        for pred in prediction.json():
             if pred.get("class") == "wall" and pred.get("confidence", 0) > 0.2:
                 x = pred["x"]
                 y = pred["y"]
