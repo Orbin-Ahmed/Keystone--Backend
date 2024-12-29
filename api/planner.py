@@ -7,20 +7,57 @@ import pytesseract
 import cv2
 import numpy as np
 from uuid import uuid4
+from io import BytesIO
+import base64
+import requests
+from roboflow import Roboflow
 
 def detect_walls_and_shapes_in_image(image_file):
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        wall_model_path = os.path.join(current_dir, 'checkpoints', 'best_27k_50.pt')
-        shape_model_path = os.path.join(current_dir, 'checkpoints', 'best_1600_box_100.pt')
-        wall_model = YOLO(wall_model_path)
         uploaded_image = Image.open(image_file)
-        wall_res = wall_model.predict(uploaded_image, conf=0.1)
+        # wall_model_path = os.path.join(current_dir, 'checkpoints', 'best_27k_50.pt')
+        # wall_res = wall_model.predict(uploaded_image, conf=0.1)
+        # wall_model = YOLO(wall_model_path)
+        # wall_filtered_boxes = [
+        #     box for box in wall_res[0].boxes
+        #     if wall_model.names[int(box.cls.item())] == 'wall'
+        # ]
         
-        wall_filtered_boxes = [
-            box for box in wall_res[0].boxes
-            if wall_model.names[int(box.cls.item())] == 'wall'
-        ]
+        shape_model_path = os.path.join(current_dir, 'checkpoints', 'best_1600_box_100.pt')
+        
+        buffered = BytesIO()
+        uploaded_image.save(buffered, format="JPEG")
+        encoded_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        
+        url = "https://detect.roboflow.com/wall-detection-by-orbin/4?api_key=xiUZdGv8HlJRS3BxzY4O&overlap=0.50&confidence=0.2"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        data = f"image={encoded_image}"
+        
+        response = requests.post(url, headers=headers, data=data)
+        if response.status_code != 200:
+            raise Exception(
+                f"Wall detection API returned status code {response.status_code}"
+            )
+            
+        wall_data = response.json()
+        predictions = wall_data.get("predictions", [])
+        
+        wall_filtered_boxes = []
+        for pred in predictions:
+            if pred.get("class") == "wall" and pred.get("confidence", 0) > 0.2:
+                x = pred["x"]
+                y = pred["y"]
+                w = pred["width"]
+                h = pred["height"]
+                x1 = x - (w / 2)
+                y1 = y - (h / 2)
+                x2 = x + (w / 2)
+                y2 = y + (h / 2)
+                synthetic_box = {
+                    "xyxy": [[x1, y1, x2, y2]]
+                }
+                wall_filtered_boxes.append(synthetic_box)
         
         wall_lines_json = extract_wall_lines(wall_filtered_boxes)
         shape_model = YOLO(shape_model_path)
