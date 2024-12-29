@@ -42,8 +42,9 @@ RUN mkdir -p /app/api/checkpoints
 
 # Download checkpoint files more efficiently
 RUN cd /app/api/checkpoints && \
-    curl -L -o best_1600_box_100.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_1600_box_100.pt && \
-# curl -L -o best_27k_50.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_27k_50.pt
+    curl -L -o best_1600_box_100.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_1600_box_100.pt
+    # curl -L -o best_27k_50.pt https://github.com/Orbin-Ahmed/Keystone--Backend/releases/download/test/best_27k_50.pt
+
 # Copy the rest of your application code
 COPY . .
 
