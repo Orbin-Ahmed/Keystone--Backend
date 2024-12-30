@@ -39,3 +39,4 @@ psutil==6.0.0
 pytesseract==0.3.13
 uuid-utils==0.9.0
 pdf2image==1.17.0
+roboflow==1.1.50
