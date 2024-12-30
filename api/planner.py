@@ -16,43 +16,41 @@ def detect_walls_and_shapes_in_image(image_file):
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         uploaded_image = Image.open(image_file)
+        temp_path = os.path.join(current_dir, "temp_infer.jpg")
+        uploaded_image.save(temp_path, format="JPEG")
         # wall_model_path = os.path.join(current_dir, 'checkpoints', 'best_27k_50.pt')
-        # wall_res = wall_model.predict(uploaded_image, conf=0.1)
         # wall_model = YOLO(wall_model_path)
+        # wall_res = wall_model.predict(uploaded_image, conf=0.1)
         # wall_filtered_boxes = [
         #     box for box in wall_res[0].boxes
         #     if wall_model.names[int(box.cls.item())] == 'wall'
         # ]
         
-        shape_model_path = os.path.join(current_dir, 'checkpoints', 'best_1600_box_100.pt')
-        
-        buffered = BytesIO()
-        uploaded_image.save(buffered, format="JPEG")
-        encoded_image = base64.b64encode(buffered.getvalue()).decode("utf-8")
-        
-        rf = Roboflow(api_key="xiUZdGv8HlJRS3BxzY4O")
+        # Wall Detection 
+        rf = Roboflow(api_key=str(os.getenv('RF_API_KEY')))
         project = rf.workspace().project("wall-detection-by-orbin")
         model = project.version(4).model
-        prediction = model.predict("your_image.jpg", confidence=20, overlap=50)
-        print(prediction.json())
-        
+        prediction = model.predict(temp_path, confidence=20, overlap=50)
+        rf_result = prediction.json()
         wall_filtered_boxes = []
-        for pred in prediction.json():
-            if pred.get("class") == "wall" and pred.get("confidence", 0) > 0.2:
-                x = pred["x"]
-                y = pred["y"]
-                w = pred["width"]
-                h = pred["height"]
-                x1 = x - (w / 2)
-                y1 = y - (h / 2)
-                x2 = x + (w / 2)
-                y2 = y + (h / 2)
-                synthetic_box = {
-                    "xyxy": [[x1, y1, x2, y2]]
-                }
-                wall_filtered_boxes.append(synthetic_box)
         
+        for pred in rf_result['predictions']:
+            x_center = pred['x']
+            y_center = pred['y']
+            width = pred['width']
+            height = pred['height']
+            
+            x1 = x_center - (width / 2)
+            y1 = y_center - (height / 2)
+            x2 = x_center + (width / 2)
+            y2 = y_center + (height / 2)
+
+            wall_filtered_boxes.append([x1, y1, x2, y2])
+
         wall_lines_json = extract_wall_lines(wall_filtered_boxes)
+        
+        # Shapes Detection
+        shape_model_path = os.path.join(current_dir, 'checkpoints', 'best_1600_box_100.pt')
         shape_model = YOLO(shape_model_path)
         shape_res = shape_model.predict(uploaded_image, conf=0.25)
         
@@ -81,35 +79,7 @@ def detect_walls_and_shapes_in_image(image_file):
     except Exception as e:
         return json.dumps({"error": str(e)}, indent=4)
 
-def extract_wall_lines(filtered_boxes):
-    wall_lines = []
-
-    for box in filtered_boxes:
-        x_min, y_min, x_max, y_max = box.xyxy[0].tolist()
-        width = abs(x_max - x_min)
-        height = abs(y_max - y_min)
-        thickness = min(width, height) if min(width, height) > 0 else 8
-        id = str(uuid4())
-
-        if width > height:
-            y_middle = (y_max + y_min) / 2
-            wall_lines.append({
-                "id": id,
-                "points": [x_min, y_middle, x_max, y_middle],
-                "thickness": thickness if thickness < 0 else 8
-            })
-        else:
-            x_middle = (x_max + x_min) / 2
-            wall_lines.append({
-                "id": id,
-                "points": [x_middle, y_max, x_middle, y_min],
-                "thickness": thickness if thickness < 0 else 8
-            })
-        
-    processed_walls = process_walls(wall_lines, alignment_threshold=10, gap_threshold=20, corner_threshold=20)
-       
-    return {"lines": processed_walls}
-
+# Align shapes to walls
 def extract_shapes(filtered_boxes, wall_lines, shape_model):
     shapes = []
 
@@ -217,8 +187,83 @@ def point_to_line_distance(x0, y0, x1, y1, x2, y2):
 def calculate_wall_angle(x1, y1, x2, y2):
     return math.atan2(y2 - y1, x2 - x1)
 
+def convert_rf_to_local_yolo_format(rf_result, confidence_threshold=0.2):
+    """
+    Converts Roboflow detection JSON into the same 'synthetic_box' structure
+    that local YOLO code returns so that `extract_wall_lines()` can process it.
+    """
+    wall_filtered_boxes = []
 
-# Process Wall Function 
+    # 1. Check if "predictions" key is present
+    if "predictions" not in rf_result:
+        return wall_filtered_boxes  # empty
+
+    # 2. Loop over each prediction
+    for pred in rf_result["predictions"]:
+        # If you only want 'wall' class and confidence >= threshold:
+        if pred.get("class") == "wall" and pred.get("confidence", 0) >= confidence_threshold:
+            x_center = pred["x"]
+            y_center = pred["y"]
+            w = pred["width"]
+            h = pred["height"]
+
+            # Convert from center+width+height to xyxy
+            x1 = x_center - (w / 2)
+            x2 = x_center + (w / 2)
+            y1 = y_center - (h / 2)
+            y2 = y_center + (h / 2)
+
+            # Ensure x1 < x2, y1 < y2 (if your code expects that)
+            if x1 > x2:
+                x1, x2 = x2, x1
+            if y1 > y2:
+                y1, y2 = y2, y1
+
+            # Build the same structure local YOLO returns:
+            synthetic_box = {
+                "xyxy": [[x1, y1, x2, y2]]
+            }
+            wall_filtered_boxes.append(synthetic_box)
+
+    return wall_filtered_boxes
+
+# Process Wall Function
+def extract_wall_lines(filtered_boxes):
+    wall_lines = []
+
+    for box in filtered_boxes:
+        x_min, y_min, x_max, y_max = box
+        # x_min, y_min, x_max, y_max = box.xyxy[0].tolist()
+        width = abs(x_max - x_min)
+        height = abs(y_max - y_min)
+        thickness = min(width, height) if min(width, height) > 0 else 8
+        id = str(uuid4())
+
+        if width > height:
+            y_middle = (y_max + y_min) / 2
+            wall_lines.append({
+                "id": id,
+                "points": [x_min, y_middle, x_max, y_middle],
+                "thickness": thickness if thickness < 0 else 8
+            })
+        else:
+            x_middle = (x_max + x_min) / 2
+            wall_lines.append({
+                "id": id,
+                "points": [x_middle, y_max, x_middle, y_min],
+                "thickness": thickness if thickness < 0 else 8
+            })
+        
+    processed_walls = process_walls(wall_lines, alignment_threshold=10, gap_threshold=10, corner_threshold=10)
+       
+    return {"lines": processed_walls}
+
+def process_walls(wall_lines, alignment_threshold=20, gap_threshold=30, corner_threshold=30):
+    walls = merge_aligned_walls(wall_lines, alignment_threshold, gap_threshold)
+    walls = connect_corner_walls(walls, corner_threshold)
+    walls = trim_walls_at_intersections(walls)
+    return walls
+
 def wall_orientation(wall, angle_threshold=15):
     x1, y1, x2, y2 = wall['points']
     dx = x2 - x1
@@ -372,7 +417,7 @@ def connect_corner_walls(wall_lines, corner_threshold):
                                     walls[j]['points'][3] = y1
     return walls
 
-def trim_walls_at_intersections(walls, max_trim_amount=15):
+def trim_walls_at_intersections(walls, max_trim_amount=50):
     walls = walls.copy()
     for i in range(len(walls)):
         wall = walls[i]
@@ -436,12 +481,6 @@ def trim_walls_at_intersections(walls, max_trim_amount=15):
                             if 0 < trim_amount <= max_trim_amount:
                                 y2 = yh_fixed
                                 wall['points'] = [x1, y1, x2, y2]
-    return walls
-
-def process_walls(wall_lines, alignment_threshold=20, gap_threshold=30, corner_threshold=30):
-    walls = merge_aligned_walls(wall_lines, alignment_threshold, gap_threshold)
-    walls = connect_corner_walls(walls, corner_threshold)
-    walls = trim_walls_at_intersections(walls)
     return walls
 
 # Rooms function 
