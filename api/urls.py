@@ -25,6 +25,7 @@ urlpatterns = [
     path('detect-walls-shapes/', views.shapes_and_wall_detection_api, name= 'detect_wall_by_providing_floor_image'),
     path("create-prediction/", views.create_or_update_prediction, name="create_or_update"),
     path("get-image-url/", views.get_image_url, name="get_image_url"),
+    path("dwg-parser/", views.dwg_parser, name="dwg_file_parser"),
 ]
 
 urlpatterns += router.urls

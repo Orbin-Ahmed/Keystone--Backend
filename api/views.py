@@ -10,7 +10,7 @@ from rest_framework.viewsets import ModelViewSet
 from .serializer import *
 from django.contrib.auth.models import AnonymousUser
 from .scrapper import search_pinterest
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import Count
 from rest_framework.pagination import LimitOffsetPagination
 from .houzz import scrape_houzz_images
@@ -19,8 +19,9 @@ from pdf2image import convert_from_bytes
 from io import BytesIO
 from .models import ImagePrediction
 from django.shortcuts import get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+import os
+import requests
 
 # Create your views here.
 # 0 = super User 
@@ -355,7 +356,7 @@ def shapes_and_wall_detection_api(request):
 
     return Response({"error": "Invalid request method."}, status=405)
 
-@csrf_exempt
+@api_view(['POST'])
 def create_or_update_prediction(request):
     if request.method == "POST":
         data = json.loads(request.body)
@@ -387,7 +388,7 @@ def create_or_update_prediction(request):
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
-@csrf_exempt
+@api_view(['get'])
 def get_image_url(request):
     if request.method == "GET":
         imageID = request.GET.get("imageID")
@@ -403,3 +404,55 @@ def get_image_url(request):
         return JsonResponse({"imageURL": obj.imageURL if obj.imageURL else "pending"}, status=200)
 
     return JsonResponse({"error": "Method not allowed"}, status=405)
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+def dwg_parser(request):
+    if request.method == "POST":
+        dwg_file = request.FILES.get("file", None)
+        print(dwg_file)
+        if not dwg_file:
+            return JsonResponse({"error": "No DWG file provided under field 'file'."}, status=400)
+        
+        try:
+            convertapi_url = "https://v2.convertapi.com/convert/dwg/to/svg"
+            params = {"secret": os.getenv('CONVERTAPI')}
+            
+            form_data = {
+                "storefile": "true",
+                "ImageHeight": "1024",
+                "ImageWidth": "1280",
+                "ColorSpace": "grayscale",
+            }
+
+            files = {
+                "file": (dwg_file.name, dwg_file.read(), dwg_file.content_type),
+            }
+
+            response = requests.post(
+                convertapi_url,
+                params=params,
+                data=form_data,
+                files=files,
+            )
+
+            if response.status_code == 200:
+                converted_data = response.json()
+                return JsonResponse({"convertapi_result": converted_data}, status=200)
+
+            else:
+                return JsonResponse(
+                    {
+                        "error": "ConvertAPI call failed",
+                        "status_code": response.status_code,
+                        "details": response.text
+                    },
+                    status=500
+                )
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
